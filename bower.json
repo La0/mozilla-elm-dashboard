@@ -1,0 +1,14 @@
+{
+  "name": "elm-test",
+  "homepage": "https://github.com/La0/mozilla-elm-dashboard",
+  "authors": [
+    "Bastien Abadie <bastien@nextcairn.com>"
+  ],
+  "description": "Elm Dashboard dev test",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "~3.3.6"
+  }
+}
