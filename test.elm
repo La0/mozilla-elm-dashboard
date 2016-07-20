@@ -24,10 +24,17 @@ init analysis_id =
 
 -- Model
 
+type alias User = {
+  email: String,
+  name: String
+}
+
 type alias Bug = {
   id: Int,
   bugzilla_id: Int,
-  summary: String
+  summary: String,
+  creator: User,
+  assignee: User
 }
 
 type alias Analysis = {
@@ -63,7 +70,7 @@ fetchAnalysis id =
     Task.perform FetchAnalysisFailure FetchAnalysisSuccess (Http.get decodeAnalysis url)
 
 decodeAnalysis : Decoder Analysis
-decodeAnalysis = 
+decodeAnalysis =
   Json.object3 Analysis
     ("id" := Json.int)
     ("name" := Json.string)
@@ -71,10 +78,18 @@ decodeAnalysis =
 
 decodeBug : Decoder Bug
 decodeBug =
-  Json.object3 Bug
+  Json.object5 Bug
     ("id" := Json.int)
     ("bugzilla_id" := Json.int)
     (Json.at ["payload", "bug", "summary"] Json.string)
+    (Json.at ["payload", "analysis", "users", "creator"] decodeUser)
+    (Json.at ["payload", "analysis", "users", "assignee"] decodeUser)
+
+decodeUser : Decoder User
+decodeUser = 
+  Json.object2 User
+    ("email" := Json.string)
+    ("real_name" := Json.string)
 
 -- Subscriptions
 
@@ -92,13 +107,24 @@ view analysis =
       div [] (List.map viewBug analysis.bugs)
     ]
 
-viewBug: Bug -> Html msg
+viewBug: Bug -> Html Msg
 viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
+    div [] [
+      viewUser bug.creator "Creator",
+      viewUser bug.assignee "Assignee"
+    ],
     p [] [
       span [] [text ("#" ++ (toString bug.bugzilla_id))],
       a [href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ (toString bug.bugzilla_id)), target "_blank"] [text "View on bugzilla"]
     ],
     hr [] []
+  ]
+
+viewUser: User -> String -> Html Msg
+viewUser user title = 
+  div [class "user"] [
+    span [] [text (title ++ ": " ++ user.name)],
+    span [] [text (" >  " ++ user.email)]
   ]
